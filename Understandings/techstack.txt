@@ -1,0 +1,82 @@
+1. TechStack: React + Django REST Framework + PostgreSQL
+
+                    React
+                      │
+                      ▼
+             Django REST API
+                      │
+        ┌─────────────┼─────────────┐
+        ▼             ▼             ▼
+   PostgreSQL      AI Services    File Storage
+                       │
+              ┌────────┴─────────┐
+              ▼                  ▼
+          Data Science       LLM/RAG
+
+
+2. AI pipeline:
+Python
+pandas
+NumPy
+scikit-learn
+PyTorch/TensorFlow if required
+OCR libraries
+PDF processing
+NLP
+embeddings
+RAG
+LangChain/LangGraph
+LLM APIs
+
+***Frontend**
+
+React + Vite
+    React Router
+    Axios
+    TanStack Query
+    Recharts
+    a component library
+
+***Backend***
+
+Django + Django REST Framework
+
+Django handles:
+    authentication
+    users
+    roles
+    projects/tenders
+    bidder information
+    document metadata
+    API
+    database models
+    review workflow
+    reports
+    audit history
+
+***Database***
+
+PostgreSQL
+I would strongly prefer PostgreSQL over MongoDB here.
+Why?
+Data has relationships:
+        User
+        ↓
+        Tender
+        ↓
+        Bid
+        ↓
+        Bidder
+        ↓
+        Documents
+        ↓
+        Extracted Information
+        ↓
+        Requirements
+        ↓
+        Compliance Results
+        ↓
+        Evidence
+        ↓
+        Review
+        
