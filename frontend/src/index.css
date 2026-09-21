@@ -1,111 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: Merriweather, Georgia, serif;
+  --color-slate-50: #f7f5f0;
+  --color-slate-100: #f1f4f1;
+  --color-slate-200: #e8ebe7;
+  --color-slate-300: #d9ded9;
+  --color-slate-400: #a2afa8;
+  --color-slate-500: #718078;
+  --color-slate-600: #52615a;
+  --color-slate-700: #394840;
+  --color-slate-800: #17221d;
+  --color-slate-900: #004d3a;
+  --color-slate-950: #003b2d;
+  --color-emerald-50: #e8f5e9;
+  --color-emerald-100: #d5ebd9;
+  --color-emerald-200: #b7dec4;
+  --color-emerald-500: #00875a;
+  --color-emerald-600: #006a4e;
+  --color-emerald-700: #004d3a;
+  --color-emerald-800: #075e54;
+  --color-amber-50: #fff3e0;
+  --color-amber-100: #ffebc7;
+  --color-amber-200: #e9cf91;
+  --color-amber-500: #e6a23c;
+  --color-amber-600: #b4532a;
+  --color-red-50: #fdecec;
+  --color-red-100: #f9d8d7;
+  --color-red-200: #f2b8b5;
+  --color-red-500: #c62828;
+  --color-red-600: #b42318;
+  --color-blue-50: #e8f5e9;
+  --color-blue-100: #d5ebd9;
+  --color-blue-500: #00875a;
+  --color-blue-600: #006a4e;
+  --color-blue-700: #004d3a;
+}
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #0f172a;
+  background: #f8fafc;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-body {
-  margin: 0;
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
+html,
+body,
+#root {
+  min-width: 320px;
+  min-height: 100%;
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+body {
+  min-height: 100vh;
+  background: #f7f5f0;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+h1,
+h2,
+h3 {
+  font-family: Merriweather, Georgia, serif;
+  letter-spacing: normal;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
