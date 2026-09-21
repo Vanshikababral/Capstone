@@ -1,0 +1,157 @@
+1. Frontend:
+Login
+Dashboard
+Tender creation
+Bid upload
+Document upload
+Compliance dashboard
+Requirement table
+Risk visualization
+Evidence viewer
+Human review screen
+Report download
+
+2. Backend:
+Authentication
+API
+Database
+File upload
+User roles
+Tender management
+Bid management
+Document management
+AI service integration
+Compliance result storage
+Review workflow
+Report generation
+
+
+
+Work for DataScientists:
+
+1. Data Scientist #1 — Document Intelligence
+
+Give one person:
+Document extraction
+Their job:
+
+            PDF
+            ↓
+            OCR
+            ↓
+            Text
+            ↓
+            Structured information
+
+For example: GST certificate
+Input:GST_certificate.pdf
+Output:{
+            "document_type": "GST",
+            "gst_number": "03ABCDE1234F1Z5",
+            "business_name": "ABC Pvt Ltd",
+            "registration_date": "2021-06-15",
+            "status": "Active"
+}
+They should work on:
+OCR
+PDF parsing
+document classification
+information extraction
+entity extraction
+validation of extracted fields
+
+
+
+2. Data Scientist #2 — Tender Requirement Extraction
+
+Their responsibility:
+            Tender PDF
+                ↓
+            Text extraction
+                ↓
+            Requirement identification
+                ↓
+            Structured requirements
+
+Example:
+Tender says:Bidder must have minimum annual turnover of ₹5 crore.
+Their system produces:
+{
+    "requirement": "Minimum annual turnover",
+    "type": "financial",
+    "operator": ">=",
+    "value": 50000000,
+    "unit": "INR",
+    "mandatory": true
+}
+Another:Bidder must submit valid GST certificate.
+becomes:
+{
+    "requirement": "GST certificate",
+    "document_required": "GST",
+    "mandatory": true
+}
+This is a very important module.
+
+
+
+3. Data Scientist #3 — Compliance Matching Engine
+This person takes:
+        Tender Requirements
+                +
+        Bidder Documents
+                +
+        Extracted Information
+and produces:
+    COMPLIANT
+    NON-COMPLIANT
+    REQUIRES REVIEW
+
+Example:
+Tender:Minimum turnover = ₹5 crore
+Bidder:
+Turnover = ₹7 crore
+Result:
+COMPLIANT
+Another:
+Required MSME certificate
+Bidder:
+No MSME certificate uploaded
+Result:
+NON-COMPLIANT
+Another:
+Document expiry date unclear
+Result:
+REQUIRES REVIEW
+This directly corresponds to your SIH requirement for compliance categorization.
+
+
+
+4. Data Scientist #4 — RAG + Explainability + Risk
+
+This person can handle:
+RAG
+The system should be able to answer:
+Why was this bidder marked non-compliant?
+Instead of:
+NON-COMPLIANT
+the system should show:
+NON-COMPLIANT
+Reason:
+Required GST certificate was not found.
+Evidence:
+Tender Section 4.2 states that a valid GST
+certificate is mandatory.
+Bidder documents:
+No GST certificate detected.
+That's much more useful.
+
+They can work on:
+
+embeddings
+vector database
+RAG
+evidence retrieval
+LLM reasoning
+explainability
+risk scoring
