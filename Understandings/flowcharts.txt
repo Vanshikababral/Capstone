@@ -1,0 +1,33 @@
+                    ┌──────────────────────────┐
+                    │       FRONTEND            │
+                    │ React / Next.js           │
+                    │ Dashboard                 │
+                    │ Upload documents          │
+                    │ Compliance results        │
+                    └────────────┬─────────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────────┐
+                    │       BACKEND API         │
+                    │ Django + DRF              │
+                    │ Authentication            │
+                    │ Projects / Bids            │
+                    │ Documents                  │
+                    │ Reports                    │
+                    └────────────┬─────────────┘
+                                 │
+               ┌─────────────────┼──────────────────┐
+               │                 │                  │
+               ▼                 ▼                  ▼
+        Document AI         Tender AI          Compliance Engine
+        OCR / Extraction    Requirement        Matching
+                            Extraction          + Reasoning
+               │                 │                  │
+               └─────────────────┼──────────────────┘
+                                 ▼
+                    ┌──────────────────────────┐
+                    │       DATA LAYER         │
+                    │ PostgreSQL                │
+                    │ Object Storage            │
+                    │ Vector DB                 │
+                    └──────────────────────────┘
