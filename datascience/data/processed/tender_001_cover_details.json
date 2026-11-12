@@ -1,0 +1,72 @@
+{
+    "file_name": "tender_001.pdf",
+    "covers": [
+        {
+            "cover_number": "1",
+            "cover_name": "Fee/PreQual/Technical",
+            "documents": [
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of receipt of deposition of original EMD",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of PAN Card",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copies of Certificate of Registration of GST",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of valid electrical Contractor License",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of valid Enlistment Order",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned Copy of Affidavit",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of UNDERTAKING",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scan copies of WORK EXPERIENCE CERTIFICATES",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of Chartered Accountant Certificate for turnover for last 3 financial years",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Tender Document digitally signed",
+                    "source_page": 1
+                }
+            ]
+        },
+        {
+            "cover_number": "2",
+            "cover_name": "Finance",
+            "documents": [
+                {
+                    "document_type": ".xls",
+                    "description": "BoQ",
+                    "source_page": 1
+                }
+            ]
+        }
+    ]
+}
