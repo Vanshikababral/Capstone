@@ -1,0 +1,28 @@
+{
+    "document_type": "GST_REGISTRATION_CERTIFICATE",
+    "source_file": "03_synthetic_gst.pdf",
+    "extracted_fields": {
+        "gstin": "07ABCDE0000F1Z5",
+        "legal_name": null,
+        "trade_name": null,
+        "registration_date": null,
+        "constitution_of_business": null,
+        "principal_place_of_business": null
+    },
+    "validation": {
+        "gstin_format_valid": true,
+        "authenticity_verified": false,
+        "note": "GSTIN format validation only. Registration authenticity has not been verified against an authorized GST database."
+    },
+    "missing_fields": [
+        "legal_name",
+        "trade_name",
+        "registration_date",
+        "constitution_of_business",
+        "principal_place_of_business"
+    ],
+    "extraction_status": "REQUIRES_REVIEW",
+    "source_pages": [
+        1
+    ]
+}

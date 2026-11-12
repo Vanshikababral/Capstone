@@ -1,0 +1,24 @@
+{
+    "document_type": "AADHAAR",
+    "source_file": "02_synthetic_aadhaar_masked.pdf",
+    "extracted_fields": {
+        "masked_aadhaar_number": "XXXX XXXX 0000",
+        "holder_name": ".",
+        "date_of_birth": null,
+        "year_of_birth": null,
+        "gender": null,
+        "address": null
+    },
+    "validation": {
+        "masked_number_detected": true,
+        "authenticity_verified": false,
+        "note": "Masked Aadhaar information extraction only. No government authenticity verification performed."
+    },
+    "missing_fields": [
+        "date_of_birth_or_year_of_birth"
+    ],
+    "extraction_status": "REQUIRES_REVIEW",
+    "source_pages": [
+        1
+    ]
+}

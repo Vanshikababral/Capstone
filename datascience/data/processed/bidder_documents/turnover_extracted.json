@@ -1,0 +1,39 @@
+{
+    "document_type": "TURNOVER_CERTIFICATE",
+    "source_file": "04_synthetic_turnover_certificate.pdf",
+    "extracted_fields": {
+        "business_name": null,
+        "certifying_authority": "certificate layout • Not issued by a real CA",
+        "membership_number": null,
+        "certificate_date": null,
+        "annual_turnover_records": [
+            {
+                "financial_year": "2022-23",
+                "annual_turnover": "1200000",
+                "currency": "INR"
+            },
+            {
+                "financial_year": "2023-24",
+                "annual_turnover": "1850000",
+                "currency": "INR"
+            },
+            {
+                "financial_year": "2024-25",
+                "annual_turnover": "2500000",
+                "currency": "INR"
+            }
+        ]
+    },
+    "validation": {
+        "turnover_records_found": true,
+        "authenticity_verified": false,
+        "note": "Extracted turnover information only. The certificate and CA credentials have not been independently authenticated."
+    },
+    "missing_fields": [
+        "business_name"
+    ],
+    "extraction_status": "REQUIRES_REVIEW",
+    "source_pages": [
+        1
+    ]
+}
