@@ -1,0 +1,26 @@
+{
+    "file_name": "synthetic_tender_002.pdf",
+    "covers": [
+        {
+            "cover_number": "1",
+            "cover_name": "Fee/PreQual/Technical",
+            "documents": [
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of PAN Card",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of Aadhaar Card",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Chartered Accountant Certificate for Annual Turnover",
+                    "source_page": 1
+                }
+            ]
+        }
+    ]
+}

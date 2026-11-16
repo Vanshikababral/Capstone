@@ -1,0 +1,77 @@
+{
+    "file_name": "tender_002.pdf",
+    "covers": [
+        {
+            "cover_number": "1",
+            "cover_name": "Fee/PreQual/Technical",
+            "documents": [
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of remittance details of EMD Payment",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Tender Acceptance Letter(Annexure B)",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Copy of Contractor Registration details regarding class and its renewal for current validity",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Experience Certificate as per MTF",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Proprietorship Affidavit/Title Deed of Firm, Power of Attorney etc. as per MTF",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Copies of GST Registration Certificate and PAN Card",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Copy of Financial Turnover certificate for previous three years issued by Chartered Accountant",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Copy of valid Electrical Contractor License obtained from the state licensing board",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of Technical Bid document signed by the contractor",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Annexure III and any other document as required by the NIT",
+                    "source_page": 1
+                }
+            ]
+        },
+        {
+            "cover_number": "2",
+            "cover_name": "Finance",
+            "documents": [
+                {
+                    "document_type": ".xls",
+                    "description": "BoQ",
+                    "source_page": 1
+                },
+                {
+                    "document_type": ".pdf",
+                    "description": "Scanned copy of Price Bid signed",
+                    "source_page": 1
+                }
+            ]
+        }
+    ]
+}

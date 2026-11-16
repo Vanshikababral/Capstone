@@ -1,0 +1,16 @@
+{
+    "document_type": "PAN",
+    "source_file": "01_synthetic_pan.pdf",
+    "extracted_fields": {
+        "pan_number": "ABCDE0000F",
+        "holder_name": "Arjun Sample",
+        "business_name": "Northstar Office Solutions",
+        "date_of_birth_or_incorporation": "01/01/1995"
+    },
+    "validation": {
+        "pan_format_valid": true,
+        "authenticity_verified": false
+    },
+    "missing_fields": [],
+    "extraction_status": "EXTRACTED"
+}
