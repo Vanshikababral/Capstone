@@ -2,16 +2,20 @@ import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { ShieldAlert, ArrowRight } from 'lucide-react';
 
 import AppLayout from './layouts/AppLayout';
+import RoleGuard from './RoleGuard';
+import { ROLE_PERMISSIONS } from './roleAccess';
 
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ApprovalPending from './pages/auth/ApprovalPending';
+import RoleRequests from './pages/admin/RoleRequests';
 
 import Dashboard from './pages/dashboard/Dashboard';
 import Bids from './pages/bids';
 
-import Tenders from './pages/tenders/Tenders';
-import CreateTender from './pages/tenders/CreateTender';
-import TenderDetails from './pages/tenders/TenderDetails';
+import Tenders from './pages/tenders/TendersLive';
+import CreateTender from './pages/tenders/CreateTenderLive';
+import TenderDetails from './pages/tenders/TenderDetailsLive';
 
 import BidDetails from './pages/bids/BidDetails';
 import UploadDocuments from './pages/bids/UploadDocuments';
@@ -82,32 +86,43 @@ export default function App() {
           {/* Root redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-          {/* Dashboard */}
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/approval-pending" element={<ApprovalPending />} />
 
-          {/* Tenders — static before dynamic */}
-          <Route path="/tenders" element={<Tenders />} />
-          <Route path="/tenders/create" element={<CreateTender />} />
-          <Route path="/tenders/:id" element={<TenderDetails />} />
+          <Route element={<RoleGuard allowedRoles={ROLE_PERMISSIONS.dashboard} />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin/role-requests" element={<RoleRequests />} />
+          </Route>
 
-          {/* Bids — static segment before dynamic segment */}
-          <Route path="/bids" element={<Bids />} />
-          <Route path="/bids/:id" element={<BidDetails />} />
-          <Route path="/bids/:id/upload" element={<UploadDocuments />} />
+          <Route element={<RoleGuard allowedRoles={ROLE_PERMISSIONS.tenders} />}>
+            <Route path="/tenders" element={<Tenders />} />
+            <Route path="/tenders/:id" element={<TenderDetails />} />
+          </Route>
+          <Route element={<RoleGuard allowedRoles={ROLE_PERMISSIONS.createTender} />}>
+            <Route path="/tenders/create" element={<CreateTender />} />
+          </Route>
 
-          {/* Compliance — specific requirements path before generic bid path */}
-          <Route path="/compliance" element={<Compliance />} />
-          <Route
-            path="/compliance/requirements/:id"
-            element={<RequirementDetails />}
-          />
-          <Route path="/compliance/:bidId" element={<ComplianceResults />} />
+          <Route element={<RoleGuard allowedRoles={ROLE_PERMISSIONS.bids} />}>
+            <Route path="/bids" element={<Bids />} />
+            <Route path="/bids/:id" element={<BidDetails />} />
+            <Route path="/bids/:id/upload" element={<UploadDocuments />} />
+          </Route>
 
-          {/* Review queue */}
-          <Route path="/review" element={<ReviewCases />} />
+          <Route element={<RoleGuard allowedRoles={ROLE_PERMISSIONS.compliance} />}>
+            <Route path="/compliance" element={<Compliance />} />
+            <Route
+              path="/compliance/requirements/:id"
+              element={<RequirementDetails />}
+            />
+            <Route path="/compliance/:bidId" element={<ComplianceResults />} />
+          </Route>
 
-          {/* Reports & analytics */}
-          <Route path="/reports" element={<Reports />} />
+          <Route element={<RoleGuard allowedRoles={ROLE_PERMISSIONS.reviews} />}>
+            <Route path="/review" element={<ReviewCases />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={ROLE_PERMISSIONS.reports} />}>
+            <Route path="/reports" element={<Reports />} />
+          </Route>
         </Route>
 
         {/* ---------- Catch-all 404 ---------- */}

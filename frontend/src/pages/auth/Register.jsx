@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getApiErrorMessage } from '../../services/api';
+import { registerUser } from '../../services/auth';
 import {
   User,
   Mail,
+  Phone,
   Lock,
   Eye,
   EyeOff,
@@ -21,9 +24,9 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ROLE_OPTIONS = [
   { value: '', label: 'Select a role…' },
-  { value: 'procurement_admin', label: 'Procurement Administrator' },
-  { value: 'compliance_analyst', label: 'Compliance Analyst' },
-  { value: 'reviewer', label: 'Reviewer' },
+  { value: 'BIDDER', label: 'Bidder' },
+  { value: 'TENDER_MANAGER', label: 'Tender Manager' },
+  { value: 'REVIEWER', label: 'Reviewer' },
 ];
 
 const BRAND_HIGHLIGHTS = [
@@ -37,7 +40,7 @@ const BRAND_HIGHLIGHTS = [
     Icon: ShieldCheck,
     title: 'Role-Scoped Access Control',
     detail:
-      'Administrators, analysts, and reviewers each see exactly what they need.',
+      'Bidders, tender managers, and reviewers each see what they need.',
   },
   {
     Icon: UserCheck,
@@ -57,12 +60,21 @@ const validateField = (name, value, form) => {
       if (!trimmed) return 'Full name is required.';
       if (trimmed.length < 3) return 'Name must be at least 3 characters.';
       if (trimmed.length > 80) return 'Name must be 80 characters or fewer.';
+      if (trimmed.split(/\s+/).length < 2) {
+        return 'Enter both your first and last name.';
+      }
       return '';
     }
     case 'email': {
       const trimmed = value.trim();
       if (!trimmed) return 'Work email is required.';
       if (!EMAIL_REGEX.test(trimmed)) return 'Enter a valid email address.';
+      return '';
+    }
+    case 'phoneNumber': {
+      const trimmed = value.trim();
+      if (!trimmed) return 'Phone number is required.';
+      if (trimmed.length > 15) return 'Phone number must be 15 characters or fewer.';
       return '';
     }
     case 'password': {
@@ -100,6 +112,7 @@ export default function Register() {
   const [form, setForm] = useState({
     fullName: '',
     email: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: '',
     role: '',
@@ -109,6 +122,7 @@ export default function Register() {
   const [errors, setErrors] = useState({
     fullName: '',
     email: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: '',
     role: '',
@@ -118,6 +132,7 @@ export default function Register() {
   const [touched, setTouched] = useState({
     fullName: false,
     email: false,
+    phoneNumber: false,
     password: false,
     confirmPassword: false,
     role: false,
@@ -131,6 +146,7 @@ export default function Register() {
 
   const fullNameRef = useRef(null);
   const emailRef = useRef(null);
+  const phoneNumberRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmRef = useRef(null);
   const roleRef = useRef(null);
@@ -193,18 +209,6 @@ export default function Register() {
     [form]
   );
 
-  /* ---------------- Derived validity ---------------- */
-  const isFormValid = useMemo(() => {
-    return (
-      validateField('fullName', form.fullName, form) === '' &&
-      validateField('email', form.email, form) === '' &&
-      validateField('password', form.password, form) === '' &&
-      validateField('confirmPassword', form.confirmPassword, form) === '' &&
-      validateField('role', form.role, form) === '' &&
-      validateField('terms', form.terms, form) === ''
-    );
-  }, [form]);
-
   /* ---------------- Submit ---------------- */
   const handleSubmit = useCallback(
     async (event) => {
@@ -214,6 +218,7 @@ export default function Register() {
       const nextErrors = {
         fullName: validateField('fullName', form.fullName, form),
         email: validateField('email', form.email, form),
+        phoneNumber: validateField('phoneNumber', form.phoneNumber, form),
         password: validateField('password', form.password, form),
         confirmPassword: validateField(
           'confirmPassword',
@@ -228,6 +233,7 @@ export default function Register() {
       setTouched({
         fullName: true,
         email: true,
+        phoneNumber: true,
         password: true,
         confirmPassword: true,
         role: true,
@@ -238,6 +244,7 @@ export default function Register() {
       const order = [
         ['fullName', fullNameRef],
         ['email', emailRef],
+        ['phoneNumber', phoneNumberRef],
         ['password', passwordRef],
         ['confirmPassword', confirmRef],
         ['role', roleRef],
@@ -251,18 +258,31 @@ export default function Register() {
       }
 
       setIsSubmitting(true);
+      try {
+        const [firstName, ...lastNameParts] = form.fullName.trim().split(/\s+/);
+        const response = await registerUser({
+          first_name: firstName,
+          last_name: lastNameParts.join(' '),
+          email: form.email.trim(),
+          phone_number: form.phoneNumber.trim(),
+          password: form.password,
+          confirm_password: form.confirmPassword,
+          requested_role: form.role,
+        });
 
-      // Simulated network round-trip. Replace with Django endpoint in future step.
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setIsSubmitting(false);
-      setBanner({
-        type: 'success',
-        message:
-          'Registration submitted. Redirecting to sign in…',
-      });
-
-      setTimeout(() => navigate('/login'), 900);
+        setBanner({
+          type: 'success',
+          message: `${response.message} Redirecting to sign in…`,
+        });
+        setTimeout(() => navigate('/login'), 900);
+      } catch (error) {
+        setBanner({
+          type: 'error',
+          message: getApiErrorMessage(error),
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     },
     [form, navigate]
   );
@@ -313,7 +333,7 @@ export default function Register() {
           </h2>
           <p className="text-sm leading-relaxed text-slate-400">
             Access is granted per role within your organisation — procurement
-            administrators, compliance analysts, and reviewers each receive
+            bidders, tender managers, and reviewers each receive
             scoped permissions aligned to their function.
           </p>
         </div>
@@ -504,6 +524,59 @@ export default function Register() {
                     aria-hidden="true"
                   />
                   {errors.email}
+                </p>
+              ) : null}
+            </div>
+
+            {/* Phone number */}
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="register-phone"
+                className="text-[12.5px] font-medium text-slate-700"
+              >
+                Phone Number
+              </label>
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <Phone className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <input
+                  ref={phoneNumberRef}
+                  id="register-phone"
+                  name="phoneNumber"
+                  type="tel"
+                  autoComplete="tel"
+                  maxLength={15}
+                  value={form.phoneNumber}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  placeholder="Your contact number"
+                  aria-invalid={Boolean(errors.phoneNumber)}
+                  aria-describedby={
+                    errors.phoneNumber ? 'register-phone-error' : undefined
+                  }
+                  aria-required="true"
+                  disabled={isSubmitting}
+                  className={[
+                    'h-10 w-full rounded-md border bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400',
+                    'transition-colors focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400',
+                    errors.phoneNumber
+                      ? 'border-red-200 focus:border-red-600 focus:ring-red-600/20'
+                      : 'border-slate-200 focus:border-emerald-600 focus:ring-emerald-600/20',
+                  ].join(' ')}
+                />
+              </div>
+              {errors.phoneNumber ? (
+                <p
+                  id="register-phone-error"
+                  role="alert"
+                  className="flex items-center gap-1.5 text-[11.5px] font-medium text-red-600"
+                >
+                  <AlertCircle
+                    className="h-3.5 w-3.5 flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                  {errors.phoneNumber}
                 </p>
               ) : null}
             </div>

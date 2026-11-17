@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
+import { clearAuthTokens, getAccessToken, getCurrentUser } from '../services/auth';
+import { ROLE_HOME } from '../roleAccess';
 import './AppLayout.css';
 
 const useMediaQuery = (query) => {
@@ -41,9 +43,46 @@ const usePersistedState = (key, initialValue) => {
 };
 
 export default function AppLayout() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useMediaQuery('(max-width: 1024px)');
   const [collapsed, setCollapsed] = usePersistedState('al:collapsed', false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!getAccessToken()) {
+      navigate('/login', { replace: true });
+      return () => {
+        active = false;
+      };
+    }
+
+    getCurrentUser()
+      .then((currentUser) => {
+        if (active) setUser(currentUser);
+      })
+      .catch(() => {
+        clearAuthTokens();
+        if (active) navigate('/login', { replace: true });
+      })
+      .finally(() => {
+        if (active) setAuthChecked(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
+
+  const handleSignOut = useCallback(() => {
+    clearAuthTokens();
+    setUser(null);
+    navigate('/login', { replace: true });
+  }, [navigate]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -59,6 +98,27 @@ export default function AppLayout() {
   }, [setCollapsed]);
 
   const effectiveCollapsed = !isMobile && collapsed;
+  const isPendingApproval =
+    user?.role_request_status === 'PENDING' && Boolean(user?.requested_role);
+
+  if (!authChecked || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-600">
+        Checking your sign-in…
+      </div>
+    );
+  }
+
+  if (
+    isPendingApproval &&
+    location.pathname !== '/approval-pending'
+  ) {
+    return <Navigate to="/approval-pending" replace />;
+  }
+
+  if (!isPendingApproval && location.pathname === '/') {
+    return <Navigate to={ROLE_HOME[user.role] || '/login'} replace />;
+  }
 
   return (
     <div className="app-layout-shell">
@@ -68,12 +128,18 @@ export default function AppLayout() {
         onClose={() => setMobileOpen(false)}
         onNavigate={() => setMobileOpen(false)}
         onToggleCollapse={() => setCollapsed((current) => !current)}
+        onSignOut={handleSignOut}
+        user={user}
       />
 
       <div className="app-layout-main">
-        <Navbar onMobileMenuToggle={() => setMobileOpen(true)} />
+        <Navbar
+          onMobileMenuToggle={() => setMobileOpen(true)}
+          onSignOut={handleSignOut}
+          user={user}
+        />
         <main className="app-layout-content" id="main-content" tabIndex={-1}>
-          <Outlet />
+          <Outlet context={user} />
         </main>
       </div>
     </div>

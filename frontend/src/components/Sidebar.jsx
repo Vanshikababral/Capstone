@@ -11,18 +11,19 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
+import { ROLE_HOME, ROLE_NAVIGATION } from '../roleAccess';
 
 /* ------------------------------------------------------------------ */
 /*  Navigation model — single source of truth for sidebar items       */
 /* ------------------------------------------------------------------ */
-const NAV_ITEMS = [
-  { to: '/dashboard',  label: 'Dashboard',     icon: LayoutDashboard },
-  { to: '/tenders',    label: 'Tenders',       icon: FileText },
-  { to: '/bids',       label: 'Bids',          icon: Gavel },
-  { to: '/compliance', label: 'Compliance',    icon: ShieldCheck },
-  { to: '/review',     label: 'Review Cases',  icon: ClipboardCheck },
-  { to: '/reports',    label: 'Reports',       icon: BarChart3 },
-];
+const NAV_ICONS = {
+  dashboard: LayoutDashboard,
+  tenders: FileText,
+  bids: Gavel,
+  compliance: ShieldCheck,
+  review: ClipboardCheck,
+  reports: BarChart3,
+};
 
 /* ------------------------------------------------------------------ */
 /*  NavLink className resolver                                        */
@@ -47,9 +48,19 @@ export default function Sidebar({
   onClose,
   onNavigate,
   onToggleCollapse,
+  onSignOut,
+  user,
 }) {
   /* Mobile drawer is always expanded — collapse only applies on desktop */
   const collapsed = isCollapsed && !isMobileOpen;
+  const isPendingApproval =
+    user?.role_request_status === 'PENDING' && Boolean(user?.requested_role);
+  const visibleNavItems = isPendingApproval
+    ? [{ to: '/approval-pending', label: 'Approval Status', icon: 'review' }]
+    : ROLE_NAVIGATION[user?.role] || [];
+  const homePath = isPendingApproval
+    ? '/approval-pending'
+    : ROLE_HOME[user?.role] || '/login';
 
   return (
     <>
@@ -80,7 +91,7 @@ export default function Sidebar({
           ].join(' ')}
         >
           <Link
-            to="/dashboard"
+            to={homePath}
             aria-label="BidSentinel home"
             className="flex items-center gap-2.5 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-900"
           >
@@ -120,8 +131,8 @@ export default function Sidebar({
           className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2 py-4"
         >
           <ul className="flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
+            {visibleNavItems.map((item) => {
+              const Icon = NAV_ICONS[item.icon];
               return (
                 <li key={item.to}>
                   <NavLink
@@ -173,9 +184,7 @@ export default function Sidebar({
           )}
           <button
             type="button"
-            onClick={() => {
-              /* Logout handler intentionally not implemented */
-            }}
+            onClick={onSignOut}
             title={collapsed ? 'Sign out' : undefined}
             aria-label={collapsed ? 'Sign out' : undefined}
             className={[

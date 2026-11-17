@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getApiErrorMessage } from '../../services/api';
+import {
+  clearAuthTokens,
+  getCurrentUser,
+  loginUser,
+  saveAuthTokens,
+} from '../../services/auth';
+import { ROLE_HOME } from '../../roleAccess';
 import {
   ShieldCheck,
   Lock,
@@ -22,13 +30,9 @@ const validateField = (name, value) => {
   switch (name) {
     case 'email': {
       const trimmed = value.trim();
-      if (!trimmed) return 'Email or username is required.';
-      // Accept either a valid email OR a plain username (≥3 chars)
-      if (trimmed.includes('@') && !EMAIL_REGEX.test(trimmed)) {
+      if (!trimmed) return 'Email is required.';
+      if (!EMAIL_REGEX.test(trimmed)) {
         return 'Enter a valid email address.';
-      }
-      if (!trimmed.includes('@') && trimmed.length < 3) {
-        return 'Username must be at least 3 characters.';
       }
       return '';
     }
@@ -124,14 +128,6 @@ export default function Login() {
     []
   );
 
-  /* ---------------- Derived validity ---------------- */
-  const isFormValid = useMemo(() => {
-    return (
-      validateField('email', form.email) === '' &&
-      validateField('password', form.password) === ''
-    );
-  }, [form.email, form.password]);
-
   /* ---------------- Submit handler ---------------- */
   const handleSubmit = useCallback(
     async (event) => {
@@ -154,24 +150,30 @@ export default function Login() {
       }
 
       setIsSubmitting(true);
-
-      // Simulated network round-trip. Replace with Django JWT call in future step.
-      await new Promise((resolve) => setTimeout(resolve, 900));
-
-      setIsSubmitting(false);
-      setBanner({
-        type: 'success',
-        message: 'Credentials verified. Redirecting to dashboard…',
-      });
-
-      // Brief pause so the success banner is perceivable before navigation
-      setTimeout(() => navigate('/dashboard'), 700);
+      try {
+        const tokens = await loginUser(form.email.trim(), form.password);
+        saveAuthTokens(tokens, form.remember);
+        const user = await getCurrentUser();
+        if (user.role_request_status === 'PENDING' && user.requested_role) {
+          navigate('/approval-pending');
+        } else {
+          navigate(ROLE_HOME[user.role] || '/login');
+        }
+      } catch (error) {
+        clearAuthTokens();
+        setBanner({
+          type: 'error',
+          message: getApiErrorMessage(error),
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     },
-    [form.email, form.password, navigate]
+    [form.email, form.password, form.remember, navigate]
   );
 
   /* ---------------- Prevent double submit ---------------- */
-  const submitDisabled = isSubmitting || (!isFormValid && touched.email && touched.password);
+  const submitDisabled = isSubmitting;
 
   return (
     <div className="grid min-h-screen grid-cols-1 bg-slate-50 lg:grid-cols-2">
@@ -319,7 +321,7 @@ export default function Login() {
                 htmlFor="login-email"
                 className="text-[12.5px] font-medium text-slate-700"
               >
-                Email or Username
+                Email
               </label>
               <div className="relative">
                 <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
@@ -329,7 +331,7 @@ export default function Login() {
                   ref={emailRef}
                   id="login-email"
                   name="email"
-                  type="text"
+                  type="email"
                   inputMode="email"
                   autoComplete="username"
                   value={form.email}
@@ -457,7 +459,7 @@ export default function Login() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={submitDisabled}
               aria-busy={isSubmitting}
               className={[
                 'group mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold text-white',

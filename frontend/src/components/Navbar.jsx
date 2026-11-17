@@ -14,12 +14,6 @@ import {
 /* ------------------------------------------------------------------ */
 /*  Mock data — swap for API-driven sources in future iterations      */
 /* ------------------------------------------------------------------ */
-const MOCK_USER = {
-  name: 'Procurement Admin',
-  role: 'Compliance Analyst',
-  initials: 'PA',
-};
-
 const MOCK_NOTIFICATIONS = [
   {
     id: 'n1',
@@ -101,7 +95,7 @@ const useOutsideClick = (ref, handler, enabled = true) => {
 /* ------------------------------------------------------------------ */
 /*  Navbar                                                            */
 /* ------------------------------------------------------------------ */
-export default function Navbar({ onMobileMenuToggle, title }) {
+export default function Navbar({ onMobileMenuToggle, onSignOut, title, user }) {
   const { pathname } = useLocation();
 
   const [notifOpen, setNotifOpen] = useState(false);
@@ -114,6 +108,20 @@ export default function Navbar({ onMobileMenuToggle, title }) {
     () => title ?? deriveTitleFromPath(pathname),
     [title, pathname]
   );
+  const displayName =
+    [user?.first_name, user?.last_name].filter(Boolean).join(' ') ||
+    user?.email ||
+    'Account';
+  const displayRole = (user?.role || 'User')
+    .toLowerCase()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  const initials = displayName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
 
   const closeAll = useCallback(() => {
     setNotifOpen(false);
@@ -307,14 +315,14 @@ export default function Navbar({ onMobileMenuToggle, title }) {
               className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white"
               aria-hidden="true"
             >
-              {MOCK_USER.initials}
+              {initials}
             </span>
             <span className="hidden flex-col leading-tight sm:flex">
               <span className="max-w-[140px] truncate text-[12px] font-semibold text-slate-800">
-                {MOCK_USER.name}
+                {displayName}
               </span>
               <span className="max-w-[140px] truncate text-[10.5px] text-slate-500">
-                {MOCK_USER.role}
+                {displayRole}
               </span>
             </span>
             <ChevronDown
@@ -337,14 +345,14 @@ export default function Navbar({ onMobileMenuToggle, title }) {
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-[12px] font-semibold text-white"
                   aria-hidden="true"
                 >
-                  {MOCK_USER.initials}
+                  {initials}
                 </span>
                 <span className="flex min-w-0 flex-col leading-tight">
                   <span className="truncate text-[13px] font-semibold text-slate-800">
-                    {MOCK_USER.name}
+                    {displayName}
                   </span>
                   <span className="truncate text-[11px] text-slate-500">
-                    {MOCK_USER.role}
+                    {displayRole}
                   </span>
                 </span>
               </div>
@@ -378,6 +386,7 @@ export default function Navbar({ onMobileMenuToggle, title }) {
                 <button
                   type="button"
                   role="menuitem"
+                  onClick={onSignOut}
                   className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[13px] font-medium text-red-600 transition-colors hover:bg-red-50 focus:bg-red-50 focus:outline-none"
                 >
                   <LogOut

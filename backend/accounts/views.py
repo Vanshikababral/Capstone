@@ -206,7 +206,8 @@ def role_request_list_view(request):
         )
 
     users = User.objects.filter(
-        role_request_status=User.RoleRequestStatus.PENDING
+        role_request_status=User.RoleRequestStatus.PENDING,
+        requested_role__gt="",
     ).order_by("date_joined")
 
     data = [
