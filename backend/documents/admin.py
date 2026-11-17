@@ -32,6 +32,8 @@ class BidDocumentAdmin(admin.ModelAdmin):
     readonly_fields = (
         "original_filename",
         "extracted_text",
+        "extraction_result",
+        "processing_error",
         "processing_status",
         "uploaded_at",
         "updated_at",
@@ -65,6 +67,8 @@ class TenderDocumentAdmin(admin.ModelAdmin):
     readonly_fields = (
         "original_filename",
         "extracted_text",
+        "extraction_result",
+        "processing_error",
         "processing_status",
         "uploaded_at",
         "updated_at",

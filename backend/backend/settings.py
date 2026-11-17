@@ -168,3 +168,5 @@ AUTH_USER_MODEL = "accounts.User"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+DATASCIENCE_EXTRACTOR = os.getenv("DATASCIENCE_EXTRACTOR", "")

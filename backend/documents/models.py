@@ -50,6 +50,18 @@ class BidDocument(models.Model):
 
     extracted_text = models.TextField(blank=True)
 
+    extraction_result = models.JSONField(default=dict, blank=True)
+
+    processing_error = models.TextField(blank=True)
+
+    requirement = models.ForeignKey(
+        "requirements_engine.TenderRequirement",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="bid_documents",
+    )
+
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     updated_at = models.DateTimeField(auto_now=True)
@@ -104,6 +116,10 @@ class TenderDocument(models.Model):
     )
 
     extracted_text = models.TextField(blank=True)
+
+    extraction_result = models.JSONField(default=dict, blank=True)
+
+    processing_error = models.TextField(blank=True)
 
     processing_status = models.CharField(
         max_length=20,

@@ -31,6 +31,9 @@ class BidDocumentSerializer(serializers.ModelSerializer):
             "original_filename",
             "processing_status",
             "extracted_text",
+            "extraction_result",
+            "processing_error",
+            "requirement",
             "uploaded_at",
             "updated_at",
         ]
@@ -43,9 +46,20 @@ class BidDocumentSerializer(serializers.ModelSerializer):
             "original_filename",
             "processing_status",
             "extracted_text",
+            "extraction_result",
+            "processing_error",
             "uploaded_at",
             "updated_at",
         ]
+
+    def validate(self, attrs):
+        bid = attrs.get("bid") or getattr(self.instance, "bid", None)
+        requirement = attrs.get("requirement")
+        if bid and requirement and requirement.tender_id != bid.tender_id:
+            raise serializers.ValidationError(
+                {"requirement": "The requirement must belong to this bid's tender."}
+            )
+        return attrs
 
     def validate_title(self, value):
         value = value.strip()
@@ -106,6 +120,8 @@ class TenderDocumentSerializer(serializers.ModelSerializer):
             "file",
             "original_filename",
             "extracted_text",
+            "extraction_result",
+            "processing_error",
             "processing_status",
             "uploaded_at",
             "updated_at"
@@ -118,6 +134,8 @@ class TenderDocumentSerializer(serializers.ModelSerializer):
             "tender_reference",
             "original_filename",
             "extracted_text",
+            "extraction_result",
+            "processing_error",
             "processing_status",
             "uploaded_at",
             "updated_at"

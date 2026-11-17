@@ -1,4 +1,5 @@
 
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view, permission_classes
@@ -7,9 +8,9 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from bidders.models import Bid
-from .models import BidDocument,TenderDocument
-from .serializers import BidDocumentSerializer,TenderDocumentSerializer
-from .utils import extract_text_from_pdf
+from .models import BidDocument, TenderDocument
+from .serializers import BidDocumentSerializer, TenderDocumentSerializer
+from .extraction import process_document
 
 
 def is_staff_role(user):
@@ -32,6 +33,10 @@ def document_list_create(request):
             documents = BidDocument.objects.filter(
                 bid__bidder=request.user
             ).select_related("bid", "bid__tender", "uploaded_by")
+
+        bid_id = request.query_params.get("bid")
+        if bid_id:
+            documents = documents.filter(bid_id=bid_id)
 
         serializer = BidDocumentSerializer(documents, many=True)
         return Response(serializer.data)
@@ -66,31 +71,11 @@ def document_list_create(request):
             uploaded_by=request.user,
         )
 
-        if document.file.name.lower().endswith(".pdf"):
-            try:
-                extracted_text = extract_text_from_pdf(
-                    document.file.path
-                )
-
-                document.extracted_text = extracted_text
-                document.processing_status = (
-                    BidDocument.ProcessingStatus.PROCESSED
-                    if extracted_text.strip()
-                    else BidDocument.ProcessingStatus.FAILED
-                )
-
-            except Exception:
-                document.processing_status = (
-                    BidDocument.ProcessingStatus.FAILED
-                )
-
-            document.save(
-                update_fields=[
-                    "extracted_text",
-                    "processing_status",
-                    "updated_at",
-                ]
-            )
+        if (
+            document.file.name.lower().endswith(".pdf")
+            or settings.DATASCIENCE_EXTRACTOR
+        ):
+            process_document(document, "bid")
 
         return Response(
             BidDocumentSerializer(document).data,
@@ -103,7 +88,7 @@ def document_list_create(request):
     )
 
 
-@api_view(["GET"])
+@api_view(["GET", "DELETE"])
 @permission_classes([IsAuthenticated])
 def document_detail(request, pk):
     document = get_object_or_404(
@@ -113,14 +98,26 @@ def document_detail(request, pk):
         pk=pk,
     )
 
-    if (
-        document.bid.bidder_id != request.user.id
-        and not is_staff_role(request.user)
-    ):
+    owns_document = document.bid.bidder_id == request.user.id
+    can_manage_documents = (
+        request.user.is_superuser
+        or request.user.role in ["ADMIN", "TENDER_MANAGER"]
+    )
+    if request.method == "DELETE":
+        allowed = owns_document or can_manage_documents
+    else:
+        allowed = owns_document or is_staff_role(request.user)
+
+    if not allowed:
         return Response(
             {"message": "You do not have permission to view this document."},
             status=status.HTTP_403_FORBIDDEN,
         )
+
+    if request.method == "DELETE":
+        document.file.delete(save=False)
+        document.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     return Response(BidDocumentSerializer(document).data)
 
@@ -181,22 +178,7 @@ def tender_document_list_create(request):
             uploaded_by=request.user
         )
 
-        try:
-            extracted_text = extract_text_from_pdf(
-                document.file.path
-            )
-
-            document.extracted_text = extracted_text
-
-            if extracted_text.strip():
-                document.processing_status = "PROCESSED"
-            else:
-                document.processing_status = "FAILED"
-
-        except Exception:
-            document.processing_status = "FAILED"
-
-        document.save()
+        process_document(document, "tender")
 
         response_serializer = TenderDocumentSerializer(
             document,

@@ -155,3 +155,33 @@ evidence retrieval
 LLM reasoning
 explainability
 risk scoring
+
+
+Data-science integration contract
+
+Django owns uploads, permissions, persistence, and API responses. The data-science
+team provides an importable Python function configured in the backend environment:
+
+DATASCIENCE_EXTRACTOR=package.module.extract_document
+
+The function signature is:
+
+extract_document(file_path, context) -> dict
+
+Context includes document_kind, document_type, title, original_filename, and the
+selected tender requirement when one is mapped. Return an object with:
+
+{
+    "extracted_text": "...",
+    "document_type": "GST_REGISTRATION_CERTIFICATE",
+    "extracted_fields": {},
+    "validation": {},
+    "missing_fields": [],
+    "extraction_status": "EXTRACTED",
+    "source_pages": [1]
+}
+
+extracted_text is optional; the backend fills it using its existing PDF text
+extractor when omitted. The backend stores the structured fields and processing
+status and returns them through the document API. The frontend displays those
+results and does not import or call data-science code directly.

@@ -104,7 +104,9 @@ export default function App() {
           <Route element={<RoleGuard allowedRoles={ROLE_PERMISSIONS.bids} />}>
             <Route path="/bids" element={<Bids />} />
             <Route path="/bids/:id" element={<BidDetails />} />
-            <Route path="/bids/:id/upload" element={<UploadDocuments />} />
+            <Route element={<RoleGuard allowedRoles={['BIDDER']} />}>
+              <Route path="/bids/:id/upload" element={<UploadDocuments />} />
+            </Route>
           </Route>
 
           <Route element={<RoleGuard allowedRoles={ROLE_PERMISSIONS.compliance} />}>

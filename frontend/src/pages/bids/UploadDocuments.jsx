@@ -5,7 +5,6 @@ import {
   FileText,
   CheckCircle2,
   AlertCircle,
-  X,
   ArrowLeft,
   Clock,
   Trash2,
@@ -14,143 +13,31 @@ import {
   ShieldAlert,
   Layers,
 } from 'lucide-react';
-
-/* ================================================================== */
-/*  MOCK DATA                                                         */
-/* ================================================================== */
-
-const BID_REGISTRY = {
-  'BID-2026-0087': {
-    id: 'BID-2026-0087',
-    bidder: {
-      name: 'Aarav Infrastructure Solutions Pvt. Ltd.',
-      contactPerson: 'Vikram Mehta',
-    },
-    tender: {
-      ref: 'TNDR-2026-0142',
-      title: 'Supply & Installation of Network Infrastructure — Phase II',
-      organization: 'Ministry of Electronics & Information Technology',
-      category: 'IT Infrastructure',
-    },
-    requirements: [
-      {
-        id: 'req-gst',
-        name: 'GST Registration Certificate',
-        mandatory: true,
-      },
-      { id: 'req-pan', name: 'Company PAN Card', mandatory: true },
-      {
-        id: 'req-udyam',
-        name: 'Udyam / MSME Registration',
-        mandatory: false,
-      },
-      {
-        id: 'req-itr',
-        name: 'Income Tax Returns (Last 3 Years)',
-        mandatory: true,
-      },
-      {
-        id: 'req-experience',
-        name: 'Past Experience Certificates',
-        mandatory: true,
-      },
-      {
-        id: 'req-financial',
-        name: 'Audited Financial Statements',
-        mandatory: true,
-      },
-    ],
-    existingDocuments: [
-      {
-        id: 'existing-1',
-        name: 'GST_Registration_AISPL.pdf',
-        requirementId: 'req-gst',
-        uploadedAt: '2026-01-04 11:22 IST',
-        size: '428 KB',
-        status: 'ready',
-      },
-      {
-        id: 'existing-2',
-        name: 'Company_PAN_AISPL.pdf',
-        requirementId: 'req-pan',
-        uploadedAt: '2026-01-04 11:24 IST',
-        size: '212 KB',
-        status: 'ready',
-      },
-      {
-        id: 'existing-3',
-        name: 'Financials_FY22-24_Audited.pdf',
-        requirementId: 'req-financial',
-        uploadedAt: '2026-01-04 11:28 IST',
-        size: '3.2 MB',
-        status: 'review',
-      },
-    ],
-  },
-  'BID-2026-0088': {
-    id: 'BID-2026-0088',
-    bidder: {
-      name: 'Nexus Systems Integrators LLP',
-      contactPerson: 'Ananya Rao',
-    },
-    tender: {
-      ref: 'TNDR-2026-0142',
-      title: 'Supply & Installation of Network Infrastructure — Phase II',
-      organization: 'Ministry of Electronics & Information Technology',
-      category: 'IT Infrastructure',
-    },
-    requirements: [
-      { id: 'req-gst', name: 'GST Registration Certificate', mandatory: true },
-      { id: 'req-pan', name: 'Company PAN Card', mandatory: true },
-      { id: 'req-udyam', name: 'Udyam / MSME Registration', mandatory: false },
-      {
-        id: 'req-itr',
-        name: 'Income Tax Returns (Last 3 Years)',
-        mandatory: true,
-      },
-      {
-        id: 'req-experience',
-        name: 'Past Experience Certificates',
-        mandatory: true,
-      },
-      {
-        id: 'req-financial',
-        name: 'Audited Financial Statements',
-        mandatory: true,
-      },
-    ],
-    existingDocuments: [
-      {
-        id: 'existing-1',
-        name: 'GST_Certificate_NexusSystems.pdf',
-        requirementId: 'req-gst',
-        uploadedAt: '2026-01-05 09:14 IST',
-        size: '384 KB',
-        status: 'ready',
-      },
-    ],
-  },
-};
+import {
+  deleteBidDocument,
+  getBid,
+  getBidDocuments,
+  getTender,
+  getTenderRequirements,
+  uploadBidDocument,
+} from '../../services/documents';
+import { getApiErrorMessage } from '../../services/api';
 
 /* ================================================================== */
 /*  CONSTANTS                                                         */
 /* ================================================================== */
 
-const ALLOWED_EXTENSIONS = [
-  'pdf',
-  'doc',
-  'docx',
-  'xls',
-  'xlsx',
-  'jpg',
-  'jpeg',
-  'png',
-];
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'txt'];
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 /* Document lifecycle states — NEVER auto-mark new uploads as "verified" */
 const DOC_STATUS = {
+  staged: {
+    label: 'Staged',
+    className: 'bg-slate-100 text-slate-700 border-slate-200',
+    Icon: FileText,
+  },
   uploaded: {
     label: 'Uploaded',
     className: 'bg-slate-100 text-slate-700 border-slate-200',
@@ -204,7 +91,7 @@ const validateFile = (file) => {
   const ext = getFileExtension(file.name);
   if (!ext) return 'File has no extension.';
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    return `.${ext} is not an allowed format. Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, JPEG, PNG.`;
+    return `.${ext} is not an allowed format. Accepted: PDF, DOC, DOCX, TXT.`;
   }
   if (file.size > MAX_FILE_SIZE_BYTES) {
     return `File exceeds ${formatFileSize(MAX_FILE_SIZE_BYTES)} size limit.`;
@@ -212,6 +99,29 @@ const validateFile = (file) => {
   if (file.size === 0) return 'File is empty.';
   return '';
 };
+
+function mapDocumentStatus(document) {
+  if (document.processing_status === 'PROCESSING') return 'processing';
+  if (document.processing_status === 'FAILED') return 'failed';
+  if (document.processing_status === 'UPLOADED') return 'uploaded';
+
+  const result = document.extraction_result ?? {};
+  return result.extraction_status === 'EXTRACTED' ? 'ready' : 'review';
+}
+
+function mapApiDocument(document) {
+  return {
+    id: document.id,
+    name: document.original_filename || document.title,
+    requirementId: document.requirement ? String(document.requirement) : '',
+    uploadedAt: new Date(document.uploaded_at).toLocaleString(),
+    size: '—',
+    status: mapDocumentStatus(document),
+    extractionResult: document.extraction_result ?? {},
+    extractedText: document.extracted_text ?? '',
+    processingError: document.processing_error ?? '',
+  };
+}
 
 /* ================================================================== */
 /*  PRIMITIVES                                                        */
@@ -277,11 +187,11 @@ function PageHeader({ bid }) {
   return (
     <div className="flex flex-col gap-4">
       <Link
-        to={`/bids/${encodeURIComponent(bid.id)}`}
+        to="/bids"
         className="inline-flex w-fit items-center gap-1 text-[12px] font-medium text-slate-500 transition-colors hover:text-slate-800 focus:outline-none focus-visible:underline"
       >
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-        Back to Bid Details
+        Back to Bids
       </Link>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -293,9 +203,8 @@ function PageHeader({ bid }) {
             Upload Bid Documents
           </h1>
           <p className="mt-1.5 max-w-2xl text-[13px] leading-relaxed text-slate-600">
-            Attach all required documents to this bid. Files go through a
-            client-side staging step; downstream AI verification will run
-            separately once the bid is submitted for evaluation.
+            Upload the documents required by this tender. Review the
+            server-side extraction status and map each file to a requirement.
           </p>
 
           <dl className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px]">
@@ -348,7 +257,14 @@ function ChecklistSection({ bid, existingDocs, stagedDocs }) {
     const map = new Map();
 
     const upgrade = (current, candidate) => {
-      const rank = { ready: 5, processing: 4, review: 3, uploaded: 2, failed: 1 };
+      const rank = {
+        ready: 5,
+        processing: 4,
+        review: 3,
+        uploaded: 2,
+        staged: 1,
+        failed: 0,
+      };
       if (!current) return candidate;
       return (rank[candidate] ?? 0) > (rank[current] ?? 0) ? candidate : current;
     };
@@ -385,6 +301,12 @@ function ChecklistSection({ bid, existingDocs, stagedDocs }) {
       </header>
 
       <ul className="divide-y divide-slate-100">
+        {bid.requirements.length === 0 ? (
+          <li className="px-5 py-4 text-sm text-amber-700">
+            No tender requirements are configured for this bid. Add a
+            requirement before uploading documents.
+          </li>
+        ) : null}
         {bid.requirements.map((req) => {
           const status = statusByReq.get(req.id);
           return (
@@ -442,7 +364,7 @@ function ChecklistSection({ bid, existingDocs, stagedDocs }) {
 /*  DROP ZONE                                                         */
 /* ================================================================== */
 
-function DropZone({ onFiles, disabled }) {
+function DropZone({ onFiles, disabled, requirementsAvailable }) {
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef(null);
 
@@ -492,8 +414,9 @@ function DropZone({ onFiles, disabled }) {
           Stage New Documents
         </h2>
         <p className="mt-0.5 text-[12px] text-slate-500">
-          Drag files or click to browse. Accepted: PDF, DOC/DOCX, XLS/XLSX,
-          JPG/JPEG, PNG. Max {formatFileSize(MAX_FILE_SIZE_BYTES)} per file.
+          {requirementsAvailable
+            ? `Accepted: PDF, DOC, DOCX, TXT. Max ${formatFileSize(MAX_FILE_SIZE_BYTES)} per file.`
+            : 'Add a tender requirement before uploading documents.'}
         </p>
       </header>
 
@@ -540,7 +463,7 @@ function DropZone({ onFiles, disabled }) {
             ref={inputRef}
             type="file"
             multiple
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+            accept=".pdf,.doc,.docx,.txt"
             onChange={handleInputChange}
             className="sr-only"
             disabled={disabled}
@@ -770,6 +693,56 @@ function ExistingDocumentsTable({ documents, requirements, onRemove }) {
                         {doc.name}
                       </span>
                     </span>
+                    {doc.processingError ? (
+                      <p className="mt-1 text-[11px] text-red-600">
+                        {doc.processingError}
+                      </p>
+                    ) : null}
+                    {Object.keys(
+                      doc.extractionResult?.extracted_fields ?? {}
+                    ).length > 0 ||
+                    doc.extractedText ||
+                    doc.extractionResult?.source_pages?.length ? (
+                      <details className="mt-1 text-[11px] text-slate-600">
+                        <summary className="cursor-pointer font-medium">
+                          View extraction details
+                        </summary>
+                        {doc.extractionResult?.extraction_status ? (
+                          <p className="mt-1">
+                            Status: {doc.extractionResult.extraction_status}
+                          </p>
+                        ) : null}
+                        <dl className="mt-1 space-y-1">
+                          {Object.entries(
+                            doc.extractionResult.extracted_fields
+                          ).map(([field, value]) => (
+                            <div key={field}>
+                              <dt className="inline font-semibold">{field}: </dt>
+                              <dd className="inline">
+                                {typeof value === 'string'
+                                  ? value
+                                  : JSON.stringify(value)}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                        {doc.extractionResult?.missing_fields?.length ? (
+                          <p className="mt-1">
+                            Missing: {doc.extractionResult.missing_fields.join(', ')}
+                          </p>
+                        ) : null}
+                        {doc.extractionResult?.source_pages?.length ? (
+                          <p className="mt-1">
+                            Source pages: {doc.extractionResult.source_pages.join(', ')}
+                          </p>
+                        ) : null}
+                        {doc.extractedText ? (
+                          <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-slate-50 p-2">
+                            {doc.extractedText}
+                          </pre>
+                        ) : null}
+                      </details>
+                    ) : null}
                   </td>
                   <td className="px-5 py-3 text-slate-600">
                     <span className="line-clamp-1">
@@ -985,20 +958,91 @@ export default function UploadDocuments() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const bid = useMemo(() => BID_REGISTRY[id] ?? null, [id]);
-
-  const [stagedDocs, setStagedDocs] = useState([]);
-  const [existingDocs, setExistingDocs] = useState(
-    () => bid?.existingDocuments ?? []
+  const [bidData, setBidData] = useState({
+    id: null,
+    bid: null,
+    existingDocs: [],
+    error: '',
+  });
+  const [stagedState, setStagedState] = useState({ bidId: null, docs: [] });
+  const bid = bidData.id === id ? bidData.bid : null;
+  const existingDocs =
+    bidData.id === id ? bidData.existingDocs : [];
+  const loadError = bidData.id === id ? bidData.error : '';
+  const isLoading = bidData.id !== id;
+  const stagedDocs = useMemo(
+    () => (stagedState.bidId === id ? stagedState.docs : []),
+    [id, stagedState]
   );
   const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState(null);
 
-  /* Keep existing docs synced with bid swap (route param changes) */
+  const setStagedDocs = useCallback(
+    (update) => {
+      setStagedState((previous) => {
+        const currentDocs = previous.bidId === id ? previous.docs : [];
+        const docs =
+          typeof update === 'function' ? update(currentDocs) : update;
+        return { bidId: id, docs };
+      });
+    },
+    [id]
+  );
+
+  /* Load the real bid, its tender requirements, and previously uploaded docs. */
   useEffect(() => {
-    if (bid) setExistingDocs(bid.existingDocuments ?? []);
-    setStagedDocs([]);
-  }, [bid]);
+    let active = true;
+
+    async function loadBidData() {
+      try {
+        const [apiBid, apiDocuments] = await Promise.all([
+          getBid(id),
+          getBidDocuments(id),
+        ]);
+        const [tender, requirements] = await Promise.all([
+          getTender(apiBid.tender),
+          getTenderRequirements(apiBid.tender),
+        ]);
+
+        if (!active) return;
+        setBidData({
+          id,
+          bid: {
+            id: apiBid.id,
+            bidder: { name: apiBid.bidder_email },
+            tender: {
+              ref: apiBid.tender_reference,
+              title: tender.title,
+              organization: tender.department,
+              category: tender.category,
+            },
+            requirements: requirements.map((requirement) => ({
+              id: String(requirement.id),
+              name: requirement.title,
+              mandatory: requirement.priority === 'MANDATORY',
+              category: requirement.category,
+            })),
+          },
+          existingDocs: apiDocuments.map(mapApiDocument),
+          error: '',
+        });
+      } catch (error) {
+        if (active) {
+          setBidData({
+            id,
+            bid: null,
+            existingDocs: [],
+            error: getApiErrorMessage(error),
+          });
+        }
+      }
+    }
+
+    loadBidData();
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   /* Toast auto-dismiss */
   useEffect(() => {
@@ -1026,8 +1070,9 @@ export default function UploadDocuments() {
         name: file.name,
         size: file.size,
         extension: getFileExtension(file.name).toUpperCase(),
+        file,
         requirementId: '',
-        status: 'uploaded',
+        status: 'staged',
         error: '',
       });
     }
@@ -1044,7 +1089,7 @@ export default function UploadDocuments() {
           .join(' ')}`,
       });
     }
-  }, []);
+  }, [setStagedDocs]);
 
   /* ---------------- Staged row mutations ---------------- */
   const handleUpdateMapping = useCallback((docId, requirementId) => {
@@ -1055,15 +1100,29 @@ export default function UploadDocuments() {
           : doc
       )
     );
-  }, []);
+  }, [setStagedDocs]);
 
   const handleRemoveStaged = useCallback((docId) => {
     setStagedDocs((prev) => prev.filter((doc) => doc.id !== docId));
-  }, []);
+  }, [setStagedDocs]);
 
-  const handleRemoveExisting = useCallback((docId) => {
-    setExistingDocs((prev) => prev.filter((doc) => doc.id !== docId));
-  }, []);
+  const handleRemoveExisting = useCallback(async (docId) => {
+    try {
+      await deleteBidDocument(docId);
+      setBidData((previous) =>
+        previous.id === id
+          ? {
+              ...previous,
+              existingDocs: previous.existingDocs.filter(
+                (doc) => doc.id !== docId
+              ),
+            }
+          : previous
+      );
+    } catch (error) {
+      setToast({ type: 'error', message: getApiErrorMessage(error) });
+    }
+  }, [id]);
 
   /* ---------------- Validation ---------------- */
   const validateStaged = useCallback(() => {
@@ -1086,89 +1145,155 @@ export default function UploadDocuments() {
 
     setStagedDocs(validated);
     return !hasError;
-  }, [stagedDocs]);
+  }, [setStagedDocs, stagedDocs]);
 
-  /* ---------------- Simulated processing ---------------- */
+  /* ---------------- Upload and server-side processing ---------------- */
   const handleProcess = useCallback(async () => {
     if (isProcessing) return;
     if (!validateStaged()) return;
 
     setIsProcessing(true);
-
-    /* Capture the ids we are processing */
-    const targets = stagedDocs
-      .filter((d) => d.status !== 'ready')
-      .map((d) => d.id);
-
-    /* Lifecycle: uploaded -> processing -> ready */
-    for (const docId of targets) {
-      setStagedDocs((prev) =>
-        prev.map((doc) =>
-          doc.id === docId ? { ...doc, status: 'processing' } : doc
-        )
-      );
-      // Simulated async step
-      await new Promise((resolve) => setTimeout(resolve, 320));
-
-      setStagedDocs((prev) =>
-        prev.map((doc) =>
-          doc.id === docId ? { ...doc, status: 'ready' } : doc
-        )
-      );
-    }
-
-    setIsProcessing(false);
-    setToast({
-      type: 'success',
-      message: `${targets.length} document(s) processed and ready for verification.`,
-    });
-  }, [isProcessing, stagedDocs, validateStaged]);
-
-  /* ---------------- Save & Continue ---------------- */
-  const handleSaveAndContinue = useCallback(() => {
-    if (stagedDocs.length === 0) {
-      navigate(`/bids/${encodeURIComponent(id)}`);
-      return;
-    }
-
-    const notReady = stagedDocs.filter((d) => d.status !== 'ready');
-    if (notReady.length > 0) {
+    const targets = stagedDocs.filter((doc) => !doc.serverId);
+    if (targets.length === 0) {
+      setIsProcessing(false);
       setToast({
-        type: 'error',
-        message: `${notReady.length} staged document(s) still need to be processed before saving.`,
+        type: 'success',
+        message: 'All staged documents have already been uploaded.',
       });
       return;
     }
 
-    /* Promote staged → existing (simulated confirmation) */
-    const promoted = stagedDocs.map((doc) => ({
-      id: `existing-${doc.id}`,
-      name: doc.name,
-      requirementId: doc.requirementId,
-      uploadedAt: new Date()
-        .toLocaleString('en-IN', { hour12: false })
-        .replace(',', '') + ' IST',
-      size: formatFileSize(doc.size),
-      status: doc.status,
-    }));
+    let uploadedCount = 0;
 
-    setExistingDocs((prev) => [...prev, ...promoted]);
-    setStagedDocs([]);
-    setToast({
-      type: 'success',
-      message: 'Documents saved. Redirecting to bid details…',
-    });
+    for (const doc of targets) {
+      setStagedDocs((prev) =>
+        prev.map((item) =>
+          item.id === doc.id
+            ? { ...item, status: 'processing', error: '' }
+            : item
+        )
+      );
 
-    setTimeout(() => navigate(`/bids/${encodeURIComponent(id)}`), 900);
-  }, [stagedDocs, id, navigate]);
+      const requirement = bid.requirements.find(
+        (item) => item.id === doc.requirementId
+      );
+      const documentType = [
+        'TECHNICAL',
+        'FINANCIAL',
+        'ELIGIBILITY',
+        'EXPERIENCE',
+        'CERTIFICATION',
+      ].includes(requirement?.category)
+        ? requirement.category
+        : 'OTHER';
+
+      try {
+        const savedDocument = await uploadBidDocument({
+          bidId: bid.id,
+          requirementId: doc.requirementId,
+          documentType,
+          file: doc.file,
+        });
+        uploadedCount += 1;
+        const mappedDocument = mapApiDocument(savedDocument);
+        setStagedDocs((prev) =>
+          prev.map((item) =>
+            item.id === doc.id
+              ? {
+                  ...item,
+                  serverId: savedDocument.id,
+                  status: mappedDocument.status,
+                  extractionResult: mappedDocument.extractionResult,
+                  error: mappedDocument.processingError,
+                }
+              : item
+          )
+        );
+      } catch (error) {
+        setStagedDocs((prev) =>
+          prev.map((item) =>
+            item.id === doc.id
+              ? { ...item, status: 'failed', error: getApiErrorMessage(error) }
+              : item
+          )
+        );
+      }
+    }
+
+    setIsProcessing(false);
+    setToast(
+      uploadedCount
+        ? {
+            type: 'success',
+            message: `${uploadedCount} document(s) uploaded. Check their processing status below.`,
+          }
+        : {
+            type: 'error',
+            message: 'No documents were uploaded. Review the errors and try again.',
+          }
+    );
+  }, [bid, isProcessing, setStagedDocs, stagedDocs, validateStaged]);
+
+  /* ---------------- Save & Continue ---------------- */
+  const handleSaveAndContinue = useCallback(async () => {
+    if (stagedDocs.length === 0) {
+      navigate('/bids');
+      return;
+    }
+
+    const notUploaded = stagedDocs.filter((doc) => !doc.serverId);
+    if (notUploaded.length > 0) {
+      setToast({
+        type: 'error',
+        message: `${notUploaded.length} document(s) must be uploaded before continuing.`,
+      });
+      return;
+    }
+
+    try {
+      const documents = await getBidDocuments(id);
+      setBidData((previous) =>
+        previous.id === id
+          ? {
+              ...previous,
+              existingDocs: documents.map(mapApiDocument),
+            }
+          : previous
+      );
+      setStagedDocs([]);
+      setToast({
+        type: 'success',
+        message: 'Documents saved. Redirecting to bids…',
+      });
+      setTimeout(() => navigate('/bids'), 900);
+    } catch (error) {
+      setToast({ type: 'error', message: getApiErrorMessage(error) });
+    }
+  }, [stagedDocs, id, navigate, setStagedDocs]);
 
   const handleCancel = useCallback(() => {
-    navigate(`/bids/${encodeURIComponent(id)}`);
-  }, [id, navigate]);
+    navigate('/bids');
+  }, [navigate]);
 
-  /* ---------------- Fallback ---------------- */
+  if (isLoading) {
+    return (
+      <p className="py-12 text-center text-sm text-slate-600">
+        Loading bid…
+      </p>
+    );
+  }
+
   if (!bid) {
-    return <BidNotFound routeId={id} />;
+    return loadError ? (
+      <div
+        role="alert"
+        className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+      >
+        {loadError}
+      </div>
+    ) : (
+      <BidNotFound routeId={id} />
+    );
   }
 
   return (
@@ -1218,7 +1343,11 @@ export default function UploadDocuments() {
       />
 
       {/* Drop zone */}
-      <DropZone onFiles={handleFilesAdded} disabled={isProcessing} />
+      <DropZone
+        onFiles={handleFilesAdded}
+        disabled={isProcessing || bid.requirements.length === 0}
+        requirementsAvailable={bid.requirements.length > 0}
+      />
 
       {/* Staged files */}
       <StagedFilesList
@@ -1240,11 +1369,8 @@ export default function UploadDocuments() {
       {/* Sticky action bar */}
       <div className="sticky bottom-0 -mx-4 flex flex-col gap-2 border-t border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:rounded-lg sm:border sm:px-5">
         <p className="text-[11.5px] text-slate-500">
-          Newly uploaded files reach{' '}
-          <span className="font-semibold text-slate-700">
-            Ready for Verification
-          </span>{' '}
-          only — AI evaluation runs on the server side after submission.
+          Extraction results are advisory. Review them before using them for
+          compliance decisions.
         </p>
 
         <div className="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center">
